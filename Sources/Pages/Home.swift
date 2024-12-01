@@ -12,48 +12,93 @@ struct Home: StaticPage {
     var title = "Home"
 
     func body(context: PublishingContext) async -> [BlockElement] {
-        Text("Welcome to my Portfolio!")
-            .font(.title1)
+        Text("👋 Hey, I'm Romain, a Software Engineer and Apple Platforms enthusiast based in Paris, France. 🇫🇷")
+            .font(.title2)
 
-        Text("This site is a demonstration of a wide variety of Ignite elements and components all in one place, so you can find code samples for your own sites.")
+        Text("🩺 I'm currently working at Withings, the leader in connected health devices.")
             .font(.lead)
 
-        Text("Key concepts")
-            .font(.title2)
+        Group {
+            Link(
+                "Download my Resume",
+                target: "resume.pdf"
+            )
+            .linkStyle(.button)
+            .role(.primary)
 
-        Text("Before you create sites yourself, you should review some key concepts that underpin how Ignite works:")
-
-        List {
-            Link("Grid Layout", target: GridExamples())
-            Link("Navigation", target: NavigationExamples())
-            Link("Content", target: ContentExamples())
-            Link("Text", target: TextExamples())
-            Link("Styling", target: StylingExamples())
+            Link("Contact me", target: "mailto:romain.rabouan1@gmail.com")
+                .linkStyle(.button)
+                .role(.success)
+                .margin()
         }
-        .listStyle(.ordered(.default))
 
-        Text("Examples")
-            .font(.title2)
-            .margin(.top, .large)
+        Group {
+            Text("Latest Blog Posts")
+                .font(.title2)
+                .margin(.top, .extraLarge)
 
-        List {
-            Link("Accordions", target: AccordionExamples())
-            Link("Alerts", target: AlertExamples())
-            Link("Badges", target: BadgeExamples())
-            Link("Buttons", target: ButtonExamples())
-            Link("Cards", target: CardExamples())
-            Link("Carousels", target: CarouselExamples())
-            Link("Code", target: CodeExamples())
-            Link("Dropdowns", target: DropdownExamples())
-            Link("Embeds", target: EmbedExamples())
-            Link("Images", target: ImageExamples())
-            Link("Includes", target: IncludeExamples())
-            Link("Links", target: LinkExamples())
-            Link("Lists", target: ListExamples())
-            Link("Modals", target: ModalExamples())
-            Link("Quotes", target: QuoteExamples())
-            Link("Tables", target: TableExamples())
+            Link("See All", target: BlogPage())
+                .linkStyle(.button)
+                .role(.info)
         }
-        .listStyle(.unordered(.default))
+        .margin(.bottom, .large)
+
+        Section {
+            for content in Array(context.allContent.prefix(3)) {
+                ContentPreview(for: content)
+                    .width(3)
+                    .margin(.bottom)
+            }
+        }
+        .margin(.bottom, .extraLarge)
+
+        Group {
+            CustomIgniteFooter()
+        }
+    }
+}
+
+extension PageElement {
+    /// Applies a border to all sides of this element.
+    /// - Parameters:
+    ///   - width: The width of the border (default is "1px").
+    ///   - color: The color of the border (default is "black").
+    ///   - style: The style of the border (e.g., "solid", "dashed"). Defaults to "solid".
+    /// - Returns: A copy of the current element with the border applied.
+    public func border(width: String = "1px", color: String = "black", style: String = "solid") -> Self {
+        return self.style("border: \(width) \(style) \(color)")
+    }
+
+    /// Applies a border to specific sides of this element.
+    /// - Parameters:
+    ///   - edges: The edges where the border should be applied.
+    ///   - width: The width of the border (default is "1px").
+    ///   - color: The color of the border (default is "black").
+    ///   - style: The style of the border (e.g., "solid", "dashed"). Defaults to "solid".
+    /// - Returns: A copy of the current element with the border applied to the specified edges.
+    public func border(_ edges: Edge, width: String = "1px", color: String = "black", style: String = "solid") -> Self {
+        var copy = self
+
+        if edges.contains(.all) {
+            return copy.style("border: \(width) \(style) \(color)")
+        }
+
+        if edges.contains(.leading) {
+            copy = copy.style("border-left: \(width) \(style) \(color)")
+        }
+
+        if edges.contains(.trailing) {
+            copy = copy.style("border-right: \(width) \(style) \(color)")
+        }
+
+        if edges.contains(.top) {
+            copy = copy.style("border-top: \(width) \(style) \(color)")
+        }
+
+        if edges.contains(.bottom) {
+            copy = copy.style("border-bottom: \(width) \(style) \(color)")
+        }
+
+        return copy
     }
 }

@@ -17,12 +17,9 @@ struct MyTheme: Theme {
                 NavBar()
 
                 page.body
-
-                Group {
-                    CustomIgniteFooter()
-                }
             }
-            .padding(.vertical, 80)
+            .padding(.top, 140)
+            .padding(.bottom, 80)
             .class("container")
         }
     }

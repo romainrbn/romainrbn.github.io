@@ -11,40 +11,36 @@ import Ignite
 /// An example navigation bar, demonstrating how to create reusable components.
 struct NavBar: Component {
     func body(context: PublishingContext) -> [any PageElement] {
-        NavigationBar(logo: Image("/images/logo.svg", description: "ExampleSite logo").frame(width: "min(60vw, 300px)", height: "100%")) {
-
-            Dropdown("Key concepts") {
-                Link("Grid Layout", target: GridExamples())
-                Link("Navigation", target: NavigationExamples())
-                Link("Content", target: ContentExamples())
-                Link("Text", target: TextExamples())
-                Link("Styling", target: StylingExamples())
-            }
-
-            Dropdown("Examples") {
-                Link("Accordions", target: AccordionExamples())
-                Link("Alerts", target: AlertExamples())
-                Link("Badges", target: BadgeExamples())
-                Link("Buttons", target: ButtonExamples())
-                Link("Cards", target: CardExamples())
-                Link("Carousels", target: CarouselExamples())
-                Link("Code", target: CodeExamples())
-                Link("Dropdowns", target: DropdownExamples())
-                Link("Embeds", target: EmbedExamples())
-                Link("Images", target: ImageExamples())
-                Link("Includes", target: IncludeExamples())
-                Link("Links", target: LinkExamples())
-                Link("Lists", target: ListExamples())
-                Link("Modals", target: ModalExamples())
-                Link("Quotes", target: QuoteExamples())
-                Link("Tables", target: TableExamples())
-            }
-
-            Link("Ignite on GitHub", target: "https://github.com/twostraws/Ignite")
+        NavigationBar(logo: NavigationBarTitle(title: "Romain Rabouan", subtitle: "Apple Platforms Software Engineer")) {
+            Link("Download my Resume", target: "resume.pdf")
+            Link("Projects", target: "https://www.google.com/")
+            Link("Blog", target: BlogPage())
         }
         .navigationItemAlignment(.trailing)
         .navigationBarStyle(.dark)
-        .background(.firebrick)
+        .background(.slateGray)
         .position(.fixedTop)
     }
+}
+
+struct NavigationBarTitle: InlineElement {
+    var attributes: CoreAttributes = Body {
+        AnyBaseElement()
+    }.attributes
+
+    let title: String
+    let subtitle: String
+
+    func render(context: PublishingContext) -> String {
+        """
+        <div style="text-align: left;">
+        <div style="display: block; font-size: 2rem; font-weight: bold;">\(title)</div>
+        <div style="display: block; font-size: 1.2rem; font-weight: medium;">\(subtitle)</div>
+        </div>
+        """
+    }
+}
+
+struct AnyBaseElement: BaseElement {
+    func render(context: PublishingContext) -> String { "" }
 }

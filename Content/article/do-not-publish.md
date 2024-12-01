@@ -4,6 +4,7 @@ description: A testing page to check whether the Published property.
 date: 2024-05-06 15:30
 tags: Testing
 published: false
+image: /images/photos/mutexes.png
 ---
 # This article should not be published
 
