@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Romain Rabouan</title><description></description><link>https://www.yoursite.com</link><atom:link href="https://www.yoursite.com/feed.rss" rel="self" type="application/rss+xml" /><language>en</language><generator>Ignite v0.1.0</generator><image><url>https://www.yoursite.com/images/icon32.png</url><title>Romain Rabouan</title><link>https://www.yoursite.com</link><width>32</width><height>32</height></image><item><guid isPermaLink="true">https://www.yoursite.com/article/localized-strings</guid><title>Localized Strings are powerful</title><link>https://www.yoursite.com/article/localized-strings</link><description><![CDATA[Let’s dive in the new Morphology and inflection APIs in Swift.]]></description><pubDate>Sun, 01 Dec 2024 16:30:00 +0100</pubDate><dc:creator><![CDATA[Romain Rabouan]]></dc:creator><category><![CDATA[Localization]]></category><content:encoded><![CDATA[<p>Let’s dive in the new Morphology and inflection APIs in Swift.</p><h2>How can we have multiple usages of a String with only one Localization Key?</h2><p>Since iOS 15, Apple gives developers the opportunity to change a localized string depending on the context, without having to use StringsDict.</p><p>For example, now you can have:</p><pre><code class="language-swift">"Points: %lld" = "You have ^[%lld [Points]](inflect: true)";
+</code></pre><p>This way, the string will adapt depending on the argument passed into %ldd</p><ul><li>%lld = 0 ⇒ You have 0 point</li><li>%lld = 1 ⇒ You have 1 point</li><li>%lld = 2 ⇒ You have 2 point<strong>s</strong></li></ul><p>And the good thing is that it changes automatically with the language. In french, we would have:</p><ul><li>%lld = 0 ⇒ You have 0 point<strong>s</strong> (because the 0 takes a <strong>s</strong> in french)etc.</li></ul><p>In case we are not sure that Foundation will detect which word is the name to adapt here, we can easily specify which word is the noun. For example, if we take back the above example:</p><pre><code class="language-swift">"Points: %lld" = "You have ^[%lld [Points](grammar: { partOfSpeech: \"noun\" })](inflect: true)";
+</code></pre><p>This solution (compared to usual StringsDict) can be good for small project or developers, but it is only available for Apple Platforms, and so would be hard for us to implement in HealthMate. Moreover, having a syntax inside the .strings file can be a bit messy, and it is available only in French, English and Spanish for now…)</p><h2>Morphologies</h2><p>Apple also introduced a new set of tools in the Foundation framework: Morphologies.</p><p>This allows us to use the above syntax even further.</p><p>Let’s take an example in Swift:</p><pre><code class="language-swift">func buildPostLikeString() -> AttributedString {
+	var string = AttributedString(localized: 
+		"^[They liked your post](inflect: true, inflectionAlternative: 'She liked your post')"
+	)
+	var morphology = Morphology()
+	morphology.grammaticalGender = .feminine
+	string.inflect = InflectionRule(morphology: morphology)
+	return string.inflected()
+}
+</code></pre><p>As you can see here, we can set an alternative string for the main string, using <code>inflectionAlternative</code></p><p>This can be used to change the string depending on the user choice of gender, like shown above. (Apple now asks about your gender of choice when you first start your iPhone).</p><p>You can even access the user gender with:</p><pre><code class="language-swift">let userGender = Morphology.user.grammaticalGender
+</code></pre><p>and use it in your strings. 🎉</p>]]></content:encoded></item><item><guid isPermaLink="true">https://www.yoursite.com/article/actors-mutexes-locks</guid><title>Comparing Actors, Locks and Mutexes performance</title><link>https://www.yoursite.com/article/actors-mutexes-locks</link><description><![CDATA[Let’s compare performance between the good old NSLock, the more recent actors and the brand new Mutex.]]></description><pubDate>Sun, 01 Dec 2024 16:30:00 +0100</pubDate><dc:creator><![CDATA[Romain Rabouan]]></dc:creator><category><![CDATA[Core Swift]]></category><category><![CDATA[Performance]]></category><content:encoded><![CDATA[<p>Let’s compare performance between the good old NSLock, the more recent actors and the brand new Mutex.</p><h2>An introduction to <code>Mutexes</code></h2><p>In the world of programming, especially when dealing with multithreading, the need for synchronization arises to ensure that shared resources are accessed safely. One common synchronization tool is the mutex, short for “mutual exclusion.”</p><p>A mutex is a locking mechanism that ensures only one thread can access a critical section of code or a shared resource at a time. When a thread locks a mutex, other threads attempting to lock the same mutex must wait until it is unlocked. This prevents race conditions, where multiple threads might read and write to shared data simultaneously, leading to unpredictable results.</p><h3>Why Use Mutexes?</h3><p>Imagine a scenario where two threads are trying to update the same variable:</p><pre><code class="language-swift">var sharedCounter = 0
+
+DispatchQueue.global().async {
+    for _ in 0..<1000 {
+        sharedCounter += 1
+    }
+}
+
+DispatchQueue.global().async {
+    for _ in 0..<1000 {
+        sharedCounter += 1
+    }
+}
+</code></pre><p>Without synchronization, both threads may try to update sharedCounter simultaneously, leading to incorrect results. A mutex can solve this problem by ensuring that only one thread updates the counter at a time.</p><h3>How Mutexes Work:</h3><ul><li>Lock: A thread acquires the mutex lock before entering the critical section.</li><li>Critical Section: The code that accesses the shared resource.</li><li>Unlock: The thread releases the lock after completing its operation, allowing other threads to proceed.</li></ul><p>Mutexes were implemented this year with iOS 18. Here is how you can use them in your code:</p><pre><code class="language-swift">final class WithMutex: Sendable {
+    private let _storage = Mutex<Int>(0)
+
+    init() { }
+
+    func enqueue(item: Int) {
+        _storage.withLock { storage in
+            storage += 1
+        }
+    }
+}
+</code></pre><h3>What’s the difference with actors?</h3><p>An actor is a concurrency-safe type in Swift that automatically serializes access to its properties and methods.Instead of locking and unlocking, you interact with the actor’s properties asynchronously, letting Swift handle the synchronization.</p><h2>A performance comparison:</h2><h3>Compare these three small algorithms:</h3><pre><code class="language-swift">actor WithActor {
+    private var storage: Int = 0
+
+    func enqueue(item: Int) {
+        storage += 1
+    }
+}
+</code></pre><pre><code class="language-swift">final class WithMutex: Sendable {
+    private let _storage = Mutex<Int>(0)
+
+    init() { }
+
+    func enqueue(item: Int) {
+        _storage.withLock { storage in
+            storage += 1
+        }
+    }
+}
+</code></pre><pre><code class="language-swift">struct WithLock: @unchecked Sendable {
+    private var storage: Int = 0
+
+    private let lock = NSLock()
+
+    init() {}
+
+    mutating func enqueue(item: Int) {
+        lock.withLock {
+            storage += 1
+        }
+    }
+}
+</code></pre><p>Let’s compare running these three algorithms with this large operation:</p><p>We can now observe a large difference of time: Here the good old <code>NSLock</code> only takes 1.31 seconds to complete, nearly followed by the new <code>Mutex</code>.The actor, on the contrary, takes a huge 13.1 seconds to run!</p><pre><code class="language-swift">enum AlgorithmMethod: String, CaseIterable {
+    case `actor` = "actor"
+    case mutex = "Mutex"
+    case nsLock = "NSLock"
+}
+</code></pre><pre><code class="language-swift">struct MutexDisplayer {
+    let lockAlgorithm = WithNSLock()
+    let actorAlgorithm = WithActor()
+    let mutexAlgorithm = WithMutex()
+
+    let numberOfTasks: Int = 10
+    let numberOfItems: Int = 1_000_000
+
+    static func runAlgorithms() async {
+        for method in AlgorithmMethod.allCases {
+            let timeBegin = CFAbsoluteTimeGetCurrent()
+
+            numberOfTasks.forEach { _ in
+                numberOfItems.forEach { i in
+                    switch method {
+                    case .nsLock: lockAlgorithm.enqueue(item: i)
+                    case .actor: await actorAlgorithm.enqueue(item: i)
+                    case .mutex: mutexAlgorithm.enqueue(item: i)
+                    }
+                }
+            }
+
+            let elapsed = CFAbsoluteTimeGetCurrent() - timeBegin
+            print("\(method.rawValue): elapsed time = \(elapsed) seconds")
+        }
+    }
+}
+</code></pre>]]></content:encoded></item></channel></rss>

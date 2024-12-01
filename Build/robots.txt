@@ -1,0 +1,13 @@
+User-agent: Googlebot
+Disallow: /wp-admin
+
+User-agent: bingbot
+Disallow: /wp-admin
+
+User-agent: GPTBot
+Disallow: *
+
+User-agent: *
+Allow: /
+
+Sitemap: https://www.yoursite.com/sitemap.xml
